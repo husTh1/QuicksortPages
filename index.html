@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quicksort – Interactive Walkthrough</title>
+<script>
+try{var t=localStorage.getItem("qs-theme")}catch(e){}
+document.documentElement.setAttribute("data-theme",t||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));
+</script>
+<style>
+:root{--bg:#f5f3ee;--surface:#fffefb;--ink:#22262e;--muted:#6a7280;--line:#e1ddd2;--accent:#3d6fd1;--accent-soft:#e6edfb;--pivot:#f3c24b;--pivot-ink:#5c4300;--left:#d3efdd;--left-ink:#1c5a37;--right:#e4dcf6;--right-ink:#4a3a85;--why:#fff4dc;--why-line:#e8b94f;--cell:#f0eee7;--head:#ece8dc;--sig1:#3d6fd1;--sig2:#d9902f;--bad:#fde4e1;--bad-line:#d9584b;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme="dark"]{--bg:#13161b;--surface:#1b2027;--ink:#e7eaf0;--muted:#9aa3b2;--line:#2c333d;--accent:#7aa2f7;--accent-soft:#222c44;--pivot:#d9a82f;--pivot-ink:#1d1500;--left:#1f4a35;--left-ink:#a8e6c3;--right:#35295f;--right-ink:#cdbff5;--why:#3a3017;--why-line:#b8902e;--cell:#252b34;--head:#242a33;--sig1:#7aa2f7;--sig2:#f0c060;--bad:#4a2220;--bad-line:#e5786d;color-scheme:dark}
+html{height:100%;font-size:16px;scroll-padding-top:env(safe-area-inset-top,0px)}html.big{font-size:20px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:1rem/1.7 system-ui,-apple-system,"Segoe UI",Tahoma,Roboto,Arial,sans-serif;min-height:100%;-webkit-text-size-adjust:100%}
+.wrap{max-width:1080px;margin:auto;padding:12px}
+h1{font-size:1.1rem;margin:0}.sub{color:var(--muted);font-size:.8rem}
+button,select,input{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 13px;min-height:42px}
+button{font-weight:600;cursor:pointer}button:hover:not(:disabled){border-color:var(--accent)}button:disabled{opacity:.45;cursor:not-allowed}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}:root[data-theme="dark"] button.primary{color:#0e1420}
+button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.tools,.cust{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0}.cust input{flex:1 1 200px;min-width:0;direction:ltr}
+.bar{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin:6px 0 12px}.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.card{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:clamp(10px,3vw,18px)}
+.wm{position:absolute;inset-inline-end:14px;bottom:10px;font:700 1.5rem Georgia,serif;opacity:.06;transform:rotate(-8deg);pointer-events:none;white-space:nowrap;animation:drift 7s ease-in-out infinite}
+.vars{display:flex;gap:6px;flex-wrap:wrap;min-height:34px;margin-bottom:4px;direction:ltr}
+.var{background:var(--accent-soft);color:var(--accent);border-radius:9px;padding:2px 10px;font:600 .88rem ui-monospace,Consolas,monospace;animation:pop .3s}
+.arr{display:grid;grid-template-columns:repeat(var(--n),minmax(0,64px));justify-content:center;gap:6px clamp(3px,1vw,8px);margin:6px 0 4px;direction:ltr}
+.col{display:flex;flex-direction:column;align-items:center;min-width:0}
+.ptr{min-height:44px;display:flex;flex-direction:column-reverse;gap:2px;align-items:center}
+.chip{font-size:.62rem;font-weight:700;background:var(--ink);color:var(--bg);border-radius:6px;padding:0 5px;line-height:1.5}
+.cell{width:100%;text-align:center;padding:clamp(7px,2vw,12px) 0;font:700 clamp(.8rem,3.6vw,1.25rem) ui-monospace,Consolas,monospace;background:var(--cell);border:2px solid transparent;border-radius:10px;transition:background .3s,opacity .3s}
+.cell.pivot{background:var(--pivot);color:var(--pivot-ink)}.cell.left{background:var(--left);color:var(--left-ink)}.cell.right{background:var(--right);color:var(--right-ink)}
+.cell.done{background:var(--left);color:var(--left-ink);border-color:var(--left-ink)}.cell.dim{opacity:.35}
+.cell.act{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}.cell.flash{animation:flash .7s}
+.idx{font-size:.7rem;color:var(--muted);margin-top:2px}
+.note{margin-top:12px;border-radius:12px;padding:10px 14px;background:var(--accent-soft);border-inline-start:4px solid var(--accent);direction:rtl;text-align:right}
+.note.why{background:var(--why);border-color:var(--why-line)}.note.ok{background:var(--left);border-color:var(--left-ink);color:var(--left-ink)}.note.bad{background:var(--bad);border-color:var(--bad-line)}
+.note b.t{display:block;font-size:.8rem;color:var(--muted);margin-bottom:2px}.note.ok b.t{color:inherit}
+.tag{display:inline-block;font-size:.82rem;font-weight:700;color:var(--accent);margin-bottom:2px}
+h2{margin:0 0 4px;font-size:1.2rem;line-height:1.5}
+.c{direction:ltr;unicode-bidi:isolate;font:600 .9em ui-monospace,Consolas,monospace;background:var(--cell);border-radius:6px;padding:1px 6px;display:inline-block;line-height:1.5}
+.opts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.opts button{flex:1 1 180px}
+.tree{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:6px 10px;max-height:150px;overflow:auto;direction:ltr;font:.82rem ui-monospace,Consolas,monospace}
+.tree div{padding:1px 6px;border-radius:6px;white-space:nowrap}.tree .cur{background:var(--accent-soft);color:var(--accent);font-weight:700}.tree small{color:var(--muted)}
+.tw{overflow:auto;max-height:min(44vh,340px);margin-top:6px;border:1px solid var(--line);border-radius:12px;direction:ltr}.tbox{margin-top:12px;direction:ltr}.tbar{display:flex;justify-content:space-between;align-items:center;font-size:.85rem;color:var(--muted)}.tbar button{min-height:34px;padding:4px 12px;font-size:.82rem}.tbox.max{position:fixed;inset:0;z-index:4;margin:0;background:var(--surface);display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) 10px 88px}.tbox.max .tw{flex:1;max-height:none}body.tx .ctl{position:fixed;left:0;right:0;bottom:0;margin:0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:9px 8px;text-align:center;border-bottom:1px solid var(--line);border-inline-end:1px solid var(--line)}th:last-child,td:last-child{border-inline-end:0}th{background:var(--head);white-space:nowrap;position:sticky;top:0;box-shadow:0 1px 0 var(--line)}
+tr:last-child td{border-bottom:0}tr.new{animation:rowin .4s}tr.cur td{background:var(--accent-soft)}
+td.m{font-family:ui-monospace,Consolas,monospace;white-space:nowrap}td.m b{color:var(--accent)}.dim{color:var(--muted)}td.cc{min-width:90px}td.ca{min-width:130px}td.ci{font-weight:700;color:var(--accent)}td.cr{white-space:normal;word-break:break-word;text-align:left;min-width:200px}
+@media(max-width:640px){table,thead,tbody{display:block}thead{position:sticky;top:0;z-index:1;background:var(--head)}thead tr,tbody tr{display:grid;grid-template-columns:2rem 3.4rem 1fr 2.2rem;align-items:center}thead tr{grid-template-areas:"j v c i"}tbody tr{grid-template-areas:"j v c i" "a a a a" "r r r r";padding:5px 2px;border-bottom:1px solid var(--line)}tbody tr:last-child{border-bottom:0}th.x{display:none}th{position:static;padding:7px 3px;font-size:.74rem;white-space:normal}td{border:0;padding:2px 3px;font-size:.88rem}td.cj,td.cv,td.cc{border-inline-end:1px solid var(--line)}td.ca,td.cr{margin:4px 3px 0;padding:6px 9px;background:var(--cell);border-radius:8px;min-width:0}tr.cur td{background:none}tr.cur{background:var(--accent-soft)}td.cj{grid-area:j}td.cv{grid-area:v}td.cc{grid-area:c}td.ci{grid-area:i}td.ca{grid-area:a;text-align:left;white-space:normal}td.cr{grid-area:r;text-align:left;white-space:normal;word-break:break-word}td.ca::before{content:"Action: ";color:var(--accent);font:700 .78rem system-ui,sans-serif}td.cr::before{content:"Array: ";color:var(--accent);font:700 .78rem system-ui,sans-serif}.tw{max-height:min(42vh,320px)}}
+.ctl{position:sticky;bottom:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:8px;margin:12px -12px 0;padding:10px 12px;background:var(--bg);border-top:1px solid var(--line)}
+.ctl .l,.ctl .r{display:flex;gap:6px;align-items:center}.cnt{color:var(--muted);font-size:.8rem;text-align:center}
+.sig{margin:14px 0 6px;text-align:center;display:flex;justify-content:center;align-items:center;gap:8px;animation:float 4s ease-in-out infinite}
+.sig .dot{width:8px;height:8px;border-radius:50%;background:var(--sig2);animation:pulse 2s infinite}
+.shine{font-weight:700;font-size:.9rem;color:var(--sig1);background:linear-gradient(90deg,var(--sig1),var(--sig2),var(--sig1));background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shine 3.5s linear infinite}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:none;opacity:1}}
+@keyframes rowin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes flash{0%,100%{transform:none}40%{transform:translateY(-8px)}}
+@keyframes shine{to{background-position:200% center}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--sig2)}70%{box-shadow:0 0 0 8px transparent}}
+@keyframes drift{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(-6deg) translateY(-8px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Quicksort · Interactive Walkthrough</h1><div class="sub">← / → keys, swipe, or buttons</div>
+<div class="tools">
+<button id="theme">◐ Theme</button><button id="big">A+ Large</button><button id="quiz" class="on">Quiz: On</button><button id="expl" class="on">Explain: On</button><button id="auto">▶ Auto</button>
+<select id="spd"><option value="3200">Slow</option><option value="1900" selected>Normal</option><option value="1000">Fast</option></select>
+</div>
+<div class="cust"><input id="inp" placeholder="Your array: 20 2 9 7 12 15 1 6 8" inputmode="text" aria-label="Custom array"><button id="solve" class="primary">Solve mine</button><button id="lect">Lecture example</button></div>
+<div class="bar"><i id="prog"></i></div>
+<main class="card"><div class="wm">Dev.Hussein Mohammed</div><div id="main"></div></main>
+<div class="ctl">
+<div class="l"><button id="reset" aria-label="Reset">↺</button><button id="back">← Back</button></div>
+<span class="cnt" id="cnt"></span>
+<div class="r"><button class="primary" id="next">Next →</button></div>
+</div>
+<div class="sig"><span class="dot"></span><span class="shine">شرح المبرمج حسين محمد جليل · Dev.Hussein Mohammed</span></div>
+</div>
+<script>
+const LECT=[20,2,9,7,12,15,1,6,8];
+let S=[],k=0,tblExp=false,quizOn=true,explOn=true,ans={},score={r:0,t:0},timer=null,N=9;
+const $=id=>document.getElementById(id),c=t=>'<bdi class="c">'+t+'</bdi>',F=a=>"{"+a.join(", ")+"}";
+function build(A){
+ S=[];ans={};score={r:0,t:0};k=0;const n=A.length,arr=[...A];N=n;
+ let st={arr:[...A],fixed:[],lo:0,hi:n-1,pv:0,p:null,sh:0,i:null,j:null,table:0,rows:[],sw:[],pi:null,prep:0,tree:[],cur:-1,done:0};
+ const add=(t,m)=>{if(m)m(st);S.push(Object.assign(JSON.parse(JSON.stringify(st)),t))};
+ add({tag:"الهدف",title:"نرتب هذه المصفوفة بخوارزمية Quicksort",what:"عندنا "+n+" أرقام. الـ Quicksort خوارزمية «فرّق تسد»: نختار pivot، نقسم المصفوفة حواليه، وبعدين نكرر نفس الشي على كل جهة. راح نحلها كاملة لين تنرتب.",why:"ترتيب المصفوفة كلها دفعة وحدة صعب. لكن لما نفصلها لأصغر من الـ pivot وأكبر منه، تصير كل جهة مشكلة أسهل."});
+ const qs=(lo,hi,d)=>{
+  if(lo>hi)return;
+  const ni=st.tree.length,ds="quickSort(arr, "+lo+", "+hi+")",det=ni===0;
+  st.tree.push({lo,hi,pi:null,base:0,d});
+  const enter=s=>{s.cur=ni;s.lo=lo;s.hi=hi;s.pi=null;s.i=null;s.j=null;s.sw=[];s.prep=0;s.rows=[];s.table=0;s.pv=0;s.sh=0};
+  if(lo===hi){add({tag:"الحالة الأساسية · Base Case",title:c(ds)+" فيه عنصر واحد",what:"الجزء فيه عنصر واحد بس ("+arr[lo]+") فهو مرتب أصلاً ومكانه نهائي.",why:"نوقف الـ recursion لما يكون الجزء فيه 0 أو 1 عنصر، لأنه مرتب أصلاً."},s=>{enter(s);s.fixed.push(lo);s.tree[ni].base=1});return}
+  const p=arr[hi];let i=lo-1;
+  if(det){
+   add({tag:"الخطوة 1 · اختيار الـ Pivot",title:"نختار آخر عنصر: "+c("pivot = "+p),what:"نأخذ آخر عنصر "+c("arr["+hi+"] = "+p)+" ليكون الـ pivot.",why:"آخر عنصر أبسط اختيار: يبقى بالنهاية بعيد عن طريقنا ونحن نمر على باقي العناصر. تگدر تختار الأول أو عشوائي وتشتغل بنفس الطريقة."},s=>{enter(s);s.pv=1;s.p=p});
+   add({tag:"الخطوة 2 · تحديد المدى",title:c("low = "+lo)+" و "+c("high = "+hi),what:"الـ "+c("low")+" أول فهرس والـ "+c("high")+" آخر فهرس بالجزء اللي نشتغل عليه.",why:"بعدين بالـ recursion راح نستدعي الخوارزمية على أجزاء أصغر، فنحتاج نعرف بداية الجزء ونهايته بدون ما ننسخ المصفوفة."},s=>{s.sh=1});
+   add({tag:"الخطوة 3 · تحديد i",title:c("i = low − 1 = "+(lo-1)),what:"نبدي المؤشر "+c("i")+" قبل الجزء بخانة، عند "+c(lo-1)+".",why:"الـ "+c("i")+" يشير لآخر عنصر ضمن منطقة «الأصغر من الـ pivot». بالبداية المنطقة فارغة، فيكون قبل أول فهرس بخانة."},s=>{s.i=i});
+   add({tag:"الخطوة 4 · رسم الجدول",title:"نمر على العناصر بالمؤشر "+c("j"),what:"الـ "+c("j")+" يمر من الفهرس "+lo+" لين "+(hi-1)+" (كل شي ماعدا الـ pivot). لكل "+c("j")+" نسجل المقارنة والإجراء وقيمة "+c("i")+" والمصفوفة.",why:"كتابة كل خطوة بجدول تخليك تتتبع شلون تتغير المصفوفة، وهذي نفس طريقة الحل الورقي بالامتحان."},s=>{s.table=1});
+  }else add({tag:ds,title:"pivot = "+p+" ، "+c("low = "+lo)+" ، "+c("high = "+hi)+" ، "+c("i = "+i),what:"نكرر نفس الخطوات على هذا الجزء: نختار آخر عنصر ("+p+") pivot، ونبدي "+c("i = "+i)+"، وجدول جديد.",why:"كل جزء يتعامل وياه الـ Quicksort كمصفوفة مستقلة."},s=>{enter(s);s.pv=1;s.p=p;s.sh=1;s.i=i;s.table=1});
+  for(let j=lo;j<hi;j++){
+   const v=arr[j],sm=v<p,sy=sm?"<":v>p?">":"=",cmp=v+" "+sy+" "+p,i2=sm?i+1:i,a=sm?arr[i2]:null,act=sm?"i++, swap("+a+", "+v+")":"No action";
+   const rw=sm?c(cmp)+" أصغر من الـ pivot، نزيد "+c("i")+" إلى "+i2+" ونبدّل "+c("arr["+i2+"] ("+a+")")+" مع "+c("arr["+j+"] ("+v+")")+".":c(cmp)+(v>p?" أكبر من":" يساوي")+" الـ pivot"+(v>p?"":" والشرط عندنا «أصغر فقط»")+"، فما نبدّل شي والـ "+c("i")+" يبقى "+i+".";
+   const rwhy=sm?"زيادة "+c("i")+" تفتح خانة بمنطقة الأصغر للقيمة "+v+". والقيمة اللي كانت بهاي الخانة ("+a+") أكبر، فتروح للفهرس "+j+".":"القيم الأكبر نخليها على اليمين. وأي قيمة صغيرة تجي بعدين راح تبدّل وياها إذا احتاجت خانة.";
+   const tg=det?"المرور · j = "+j:ds+" · j = "+j;
+   if(det){
+    add({tag:tg,title:"نقارن "+c("arr["+j+"] = "+v)+" مع الـ pivot",what:"هل "+v+" أصغر من "+p+"؟ النتيجة: "+c(cmp)+".",why:j==lo?"كل عنصر ينقارن مع الـ pivot مرة وحدة، والنتيجة تحدد بأي جهة من الـ pivot يكون.":"نفس السؤال للعنصر اللي بعده: أصغر لو لا؟",q:{ok:sm?0:1,fb:rw,cmp}},s=>{s.j=j;s.sw=[];s.rows.push({j,v,cmp,act:null,i:null,a:null,sw:[]})});
+    if(sm)[arr[i2],arr[j]]=[arr[j],arr[i2]];i=i2;
+    add({tag:tg,title:sm?"أصغر ← نكبّر المنطقة اليسرى":"نخليه مكانه",what:rw,why:rwhy},s=>{s.arr=[...arr];s.i=i;s.sw=sm?[i,j]:[];Object.assign(s.rows[s.rows.length-1],{act,i,a:[...arr],sw:s.sw})});
+   }else{
+    if(sm)[arr[i2],arr[j]]=[arr[j],arr[i2]];i=i2;
+    add({tag:tg,title:sm?"أصغر ← i++ وswap":"ما يصير شي",what:rw,why:rwhy},s=>{s.j=j;s.arr=[...arr];s.i=i;s.sw=sm?[i,j]:[];s.rows.push({j,v,cmp,act,i,a:[...arr],sw:s.sw})});
+   }
+  }
+  const pi=i+1,disp=arr[pi],same=pi===hi;
+  const swd=same?"الـ pivot أصلاً بمكانه الصحيح (آخر خانة)، فالتبديل ما يغيّر شي.":"نبدّل "+c("arr["+pi+"] ("+disp+")")+" مع الـ pivot "+c("arr["+hi+"] ("+p+")")+".";
+  if(det){
+   add({tag:"انتهاء الحلقة",title:c("i = "+i)+(i>=lo?" الفهارس "+lo+"–"+i+" فيها القيم الأصغر":" ما لقينا أي قيمة أصغر"),what:"وصل "+c("j")+" لـ "+c("high")+" فتوقفت الحلقة. "+(i>=lo?"المواقع "+lo+" إلى "+i+" فيها "+c(arr.slice(lo,i+1).join(", "))+" وكلها أصغر من "+p+".":"المنطقة اليسرى فارغة."),why:"كل شي بعد الفهرس "+c("i")+" إما أكبر من الـ pivot أو هو الـ pivot نفسه. بقت شغلة وحدة: نحط الـ pivot بين المنطقتين."},s=>{s.j=null;s.sw=[]});
+   add({tag:"التبديل الأخير",title:c("swap(arr[i + 1], arr[high])")+" ← "+c("swap(arr["+pi+"], arr["+hi+"])"),what:c("i + 1 = "+pi)+" هو أول خانة بالمنطقة الكبيرة. "+swd,why:"مكان الـ pivot الصحيح هو مباشرة بعد المنطقة الصغيرة. والعنصر اللي ينزاح ("+disp+") أكبر من الـ pivot، فنقله للنهاية يحافظ على صحة الجهة اليمنى."},s=>{s.sw=[pi,hi];s.prep=1});
+  }
+  [arr[pi],arr[hi]]=[arr[hi],arr[pi]];
+  const L=arr.slice(lo,pi),R=arr.slice(pi+1,hi+1),calls=c("quickSort(arr, "+lo+", "+(pi-1)+")")+" ثم "+c("quickSort(arr, "+(pi+1)+", "+hi+")");
+  const rm=s=>{s.arr=[...arr];s.pi=pi;s.i=null;s.j=null;s.prep=0;s.sw=[pi,hi];s.tree[ni].pi=pi};
+  if(det){
+   add({tag:"نتيجة الـ Partition",title:"الـ pivot صار بمكانه النهائي: "+c("pi = "+pi),what:"المصفوفة: "+c(F(arr))+"<br>الجزء الأيسر "+c(F(L))+" أصغر من "+p+"، والأيمن "+c(F(R))+" أكبر منه أو يساويه.",why:"الـ pivot ما يتحرك بعد. الجهتان لسه مو مرتبتين، بس كل عنصر يسار أصغر من كل عنصر يمين، فنگدر نرتب كل جهة لحالها."},rm);
+   add({tag:"الخطوة 3 · الاستدعاء الذاتي",title:calls,what:"نستدعي Quicksort على الجهة اليسرى ثم اليمنى. الفهرس "+pi+" نتخطاه لأن الـ pivot استقر فيه.",why:"كل جهة هي نسخة أصغر من نفس المشكلة. نكرر pivot ثم partition ثم recursion لين يصير الجزء فيه 0 أو 1 عنصر (الـ Base Case) لأنه مرتب أصلاً."},s=>{s.sw=[]});
+  }else add({tag:ds+" · Partition",title:"التبديل الأخير ← "+c("pi = "+pi),what:swd+" المصفوفة: "+c(F(arr))+"<br>نكمل بـ "+calls+".",why:"نفس القاعدة: الـ pivot يستقر بمكانه النهائي، واليسار أصغر واليمين أكبر."},s=>{rm(s);s.sw=[pi,hi]});
+  st.fixed.push(pi);st.pi=null;st.sw=[];
+  qs(lo,pi-1,d+1);qs(pi+1,hi,d+1);
+ };
+ qs(0,n-1,0);
+ add({tag:"انتهى 🎉",title:"المصفوفة صارت مرتبة",what:"الناتج النهائي: "+c(F(arr)),why:"كل Partition يثبّت pivot واحد بمكانه، والـ recursion يكمل الباقي. المتوسط O(n log n)، وأسوأ حالة O(n²) إذا كان الـ pivot دايماً أصغر أو أكبر عنصر."},s=>{s.done=1;s.cur=-1;s.table=0;s.rows=[];s.pv=0;s.sh=0;s.lo=0;s.hi=n-1;s.sw=[]});
+}
+function cls(s,x){let q=["cell"];
+ if(s.fixed.includes(x))q.push("done");
+ else if(x<s.lo||x>s.hi)q.push("dim");
+ else if(s.pi!==null)q.push(x==s.pi?"pivot":x<s.pi?"left":"right");
+ else if(s.pv&&x==s.hi)q.push("pivot");
+ else if(s.i!==null&&x<=s.i&&x>=s.lo)q.push("left");
+ if(s.prep&&x==s.i+1)q.push("act");if(x===s.j)q.push("act");if(s.sw.includes(x))q.push("flash");return q.join(" ")}
+function labs(s,x){let l=[];
+ if(s.pi!==null){if(x==s.pi)l.push("pi");return l}
+ if(s.sh&&s.lo===x)l.push("low");if(s.sh&&s.hi===x)l.push("high");if(s.pv&&x==s.hi)l.push("pivot");
+ if(s.i!==null&&s.i>=s.lo&&s.i===x)l.push("i");if(s.j===x)l.push("j");if(s.prep&&x==s.i+1)l.push("i+1");return l}
+function vars(s){let v=[];if(s.pv)v.push("pivot = "+s.p);if(s.sh)v.push("low = "+s.lo,"high = "+s.hi);if(s.i!==null)v.push("i = "+s.i);if(s.j!==null)v.push("j = "+s.j);if(s.pi!==null)v.push("pi = "+s.pi);return v.map(t=>'<span class="var">'+t+'</span>').join("")}
+function per(){const w=$("main").clientWidth||320,mx=Math.max(1,Math.floor((w+6)/40)),r=Math.ceil(N/Math.min(N,mx));return Math.ceil(N/r)}
+function render(grow){
+ const s=S[k],q=s.q,locked=!!(q&&quizOn&&!ans[k]);
+ let h='<div class="vars">'+vars(s)+'</div><div class="arr" style="--n:'+per()+'">';
+ s.arr.forEach((n,x)=>{h+='<div class="col"><div class="ptr">'+labs(s,x).map(t=>'<span class="chip">'+t+'</span>').join("")+'</div><div class="'+cls(s,x)+'">'+n+'</div><div class="idx">'+x+'</div></div>'});
+ h+='</div><div class="note"><span class="tag">'+s.tag+'</span><h2>'+s.title+'</h2>'+(explOn?'<div>'+s.what+'</div>':'')+'</div>';
+ if(q&&quizOn){
+  if(!ans[k])h+='<div class="note why"><b class="t">تحدّي · فكّر قبل لا تضغط</b>شتتوقع يصير هسه للعنصر؟<div class="opts"><button data-a="1">أصغر ← i++ ثم swap</button><button data-a="2">ما يصير شي</button></div></div>';
+  else{const ok=ans[k]-1===q.ok;h+='<div class="note '+(ok?'ok':'bad')+'"><b class="t">'+(ok?'✔ إجابة صحيحة':'✖ مو هيج')+'</b>'+q.fb+'</div>'}
+ }else if(explOn)h+='<div class="note why"><b class="t">ليش هيج؟</b>'+s.why+'</div>';
+ if(s.tree.length)h+='<div class="tree">'+s.tree.map((t,x)=>'<div class="'+(x==s.cur?'cur':'')+'" style="margin-left:'+t.d*14+'px">quickSort('+t.lo+', '+t.hi+')'+(t.base?' <small>→ base case</small>':t.pi!==null?' <small>→ pi = '+t.pi+'</small>':'')+'</div>').join("")+'</div>';
+ if(s.table){h+='<div class="tbox'+(tblExp?' max':'')+'"><div class="tbar"><b>Trace table</b><button id="tx">'+(tblExp?'⤡ Close':'⤢ Expand')+'</button></div><div class="tw"><table><thead><tr><th>j</th><th>arr[j]</th><th>Comparison</th><th class="x">Action</th><th>i</th><th class="x">Array</th></tr></thead><tbody>';
+  const d='<span class="dim">…</span>';
+  s.rows.forEach((r,n)=>{const last=n==s.rows.length-1&&s.j!==null;
+   h+='<tr class="'+(last?"cur ":"")+(last&&grow?"new":"")+'"><td class="cj">'+r.j+'</td><td class="cv">'+r.v+'</td><td class="m cc">'+r.cmp+'</td><td class="m ca">'+(r.act??d)+'</td><td class="ci">'+(r.i??d)+'</td><td class="m cr">'+(r.a?"{"+r.a.map((n,x)=>r.sw.includes(x)?"<b>"+n+"</b>":n).join(", ")+"}":d)+'</td></tr>'});
+  h+='</tbody></table></div></div>'}
+ $("main").innerHTML=h;document.body.classList.toggle("tx",tblExp&&!!s.table);
+ $("prog").style.width=(k/(S.length-1)*100)+"%";
+ $("cnt").innerHTML="Step "+(k+1)+" / "+S.length+(score.t?"<br>Score "+score.r+"/"+score.t:"");
+ $("back").disabled=k==0;$("next").disabled=locked;$("next").textContent=locked?"Answer first":k==S.length-1?"Restart ↻":"Next →";
+ const tw=document.querySelector(".tw");if(tw)tw.scrollTop=tw.scrollHeight}
+function go(d){const s=S[k];if(d>0&&s.q&&quizOn&&!ans[k])return false;if(d>0&&k==S.length-1){k=0;ans={};score={r:0,t:0};render(0);return true}const n=k+d;if(n<0||n>=S.length)return false;k=n;render(d>0);return true}
+function stop(){clearInterval(timer);timer=null;$("auto").textContent="▶ Auto";$("auto").classList.remove("on")}
+$("main").addEventListener("click",e=>{if(e.target.id=="tx"){tblExp=!tblExp;render(0);return}const a=e.target.dataset&&e.target.dataset.a;if(!a)return;ans[k]=+a;score.t++;if(+a-1===S[k].q.ok)score.r++;render(0)});
+$("next").onclick=()=>go(1);$("back").onclick=()=>go(-1);$("reset").onclick=()=>{stop();k=0;ans={};score={r:0,t:0};render(0)};
+$("auto").onclick=()=>{if(timer)return stop();$("auto").textContent="⏸ Pause";$("auto").classList.add("on");const run=()=>{if(k>=S.length-1)return stop();go(1)};timer=setInterval(run,+$("spd").value)};
+$("spd").onchange=()=>{if(timer){stop();$("auto").click()}};
+$("quiz").onclick=e=>{quizOn=!quizOn;e.target.textContent="Quiz: "+(quizOn?"On":"Off");e.target.classList.toggle("on",quizOn);render(0)};
+$("expl").onclick=e=>{explOn=!explOn;e.target.textContent="Explain: "+(explOn?"On":"Off");e.target.classList.toggle("on",explOn);render(0)};
+$("big").onclick=e=>{document.documentElement.classList.toggle("big");e.target.classList.toggle("on")};
+$("theme").onclick=()=>{const r=document.documentElement,n=r.getAttribute("data-theme")=="dark"?"light":"dark";r.setAttribute("data-theme",n);try{localStorage.setItem("qs-theme",n)}catch(e){}};
+$("solve").onclick=()=>{const a=$("inp").value.split(/[\s,،]+/).filter(Boolean).map(Number);if(a.length<2||a.length>15||a.some(x=>!Number.isInteger(x)||x<-99||x>999)){$("inp").value="";$("inp").placeholder="Enter 2 to 15 integers, e.g. 5 3 8 1";return}stop();build(a);render(0)};
+$("lect").onclick=()=>{stop();$("inp").value="";build(LECT);render(0)};
+document.addEventListener("keydown",e=>{if(e.target.tagName=="INPUT"){if(e.key=="Enter")$("solve").click();return}if(e.key=="Escape"&&tblExp){tblExp=false;render(0);return}if(e.key=="ArrowRight"||e.key==" "){e.preventDefault();go(1)}else if(e.key=="ArrowLeft"){e.preventDefault();go(-1)}});
+let tx=null;$("main").addEventListener("touchstart",e=>{tx=e.touches[0].clientX},{passive:true});
+$("main").addEventListener("touchend",e=>{if(tx===null)return;const d=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(d)>70)go(d<0?1:-1)});
+build(LECT);render(0);let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>render(0),150)});
+</script>
+</body>
+</html>
